@@ -1,0 +1,6 @@
+{
+  "name": "Svaneti Legends",
+  "description": "An action-packed 2D runner game celebrating Georgian culture, history, and ancient Svaneti legend with a historical encyclopedia and persistent high scores.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
