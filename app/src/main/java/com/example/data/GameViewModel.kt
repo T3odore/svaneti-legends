@@ -18,6 +18,14 @@ enum class GameDifficulty {
     EASY, MEDIUM, HARD
 }
 
+enum class AppTheme {
+    BURGUNDY, FREEZING
+}
+
+enum class AppLanguage {
+    GEORGIAN, ENGLISH
+}
+
 enum class ItemType {
     GRAPE, KVEVRI, COIN, SCROLL, STONE, ARROW
 }
@@ -90,6 +98,34 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setDifficulty(diff: GameDifficulty) {
         _difficulty.value = diff
+    }
+
+    private val _theme = MutableStateFlow(
+        try {
+            AppTheme.valueOf(sharedPrefs.getString("app_theme", AppTheme.BURGUNDY.name) ?: AppTheme.BURGUNDY.name)
+        } catch(e: Exception) {
+            AppTheme.BURGUNDY
+        }
+    )
+    val theme: StateFlow<AppTheme> = _theme.asStateFlow()
+
+    fun setTheme(newTheme: AppTheme) {
+        _theme.value = newTheme
+        sharedPrefs.edit().putString("app_theme", newTheme.name).apply()
+    }
+
+    private val _language = MutableStateFlow(
+        try {
+            AppLanguage.valueOf(sharedPrefs.getString("app_lang", AppLanguage.GEORGIAN.name) ?: AppLanguage.GEORGIAN.name)
+        } catch(e: Exception) {
+            AppLanguage.GEORGIAN
+        }
+    )
+    val language: StateFlow<AppLanguage> = _language.asStateFlow()
+
+    fun setLanguage(lang: AppLanguage) {
+        _language.value = lang
+        sharedPrefs.edit().putString("app_lang", lang.name).apply()
     }
 
     private val _level = MutableStateFlow(1)
@@ -266,7 +302,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _lastRunCoinsBonus.value = 0
         _gameTicks.value = 0L
         _score.value = 0
-        _hearts.value = 3
+        _hearts.value = when (_difficulty.value) {
+            GameDifficulty.EASY -> 5
+            GameDifficulty.MEDIUM -> 3
+            GameDifficulty.HARD -> 2
+        }
         _level.value = 1
         _heroY.value = 0f
         heroVelocityY = 0f
@@ -319,7 +359,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _gameTicks.value = ticks
 
         // 1. Parallax Scroll updates
-        val scrollSpeed = 6f + (_level.value * 0.8f)
+        val speedFactor = when (_difficulty.value) {
+            GameDifficulty.EASY -> 0.85f
+            GameDifficulty.MEDIUM -> 1.0f
+            GameDifficulty.HARD -> 1.25f
+        }
+        val scrollSpeed = (6f + (_level.value * 0.8f)) * speedFactor
         _parallaxOffsetFar.value = (_parallaxOffsetFar.value + scrollSpeed * 0.15f) % 2000f
         _parallaxOffsetMid.value = (_parallaxOffsetMid.value + scrollSpeed * 0.4f) % 2000f
         _parallaxOffsetNear.value = (_parallaxOffsetNear.value + scrollSpeed) % 2000f
@@ -344,7 +389,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         // 3. GameObject generator
-        if (ticks % maxOf(30, 80 - _level.value * 5) == 0L) {
+        val spawnInterval = when (_difficulty.value) {
+            GameDifficulty.EASY -> maxOf(40, 95 - _level.value * 5)
+            GameDifficulty.MEDIUM -> maxOf(30, 80 - _level.value * 5)
+            GameDifficulty.HARD -> maxOf(20, 65 - _level.value * 5)
+        }
+        if (ticks % spawnInterval == 0L) {
             spawnRandomObject()
         }
 
@@ -408,6 +458,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     3 -> unlockFactById("alphabet")
                     4 -> unlockFactById("chakrulo")
                     5 -> unlockFactById("amirani")
+                    6 -> unlockFactById("prometheus_cave")
+                    7 -> unlockFactById("martvili_canyon")
+                    8 -> unlockFactById("keselo_forts")
+                    9 -> unlockFactById("uplistsikhe")
+                    10 -> unlockFactById("nikortsminda")
                 }
             }
         }
@@ -709,7 +764,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     _score.value += 40 * currentMultiplier
                     SoundSynthesizer.playCollectWine()
                     // Restore health if damaged
-                    if (_hearts.value < 3) {
+                    val maxHearts = when (_difficulty.value) {
+                        GameDifficulty.EASY -> 5
+                        GameDifficulty.MEDIUM -> 3
+                        GameDifficulty.HARD -> 2
+                    }
+                    if (_hearts.value < maxHearts) {
                         _hearts.value++
                     }
                     unlockFactById("kvevri")

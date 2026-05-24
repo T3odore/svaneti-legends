@@ -145,6 +145,71 @@ object HistoryFactsProvider {
             unlockRequirementEn = "Reach Level 5 in the game",
             iconSymbol = "⛓️",
             sourceUrl = "https://en.wikipedia.org/wiki/Amirani"
+        ),
+        HistoryFact(
+            id = "prometheus_cave",
+            titleGe = "იმერეთი • პრომეთეს მღვიმე",
+            titleEn = "Imereti • Prometheus Cave",
+            eraGe = "20 მილიონი წლის წინ",
+            eraEn = "Deep Karst Cave Formations",
+            textGe = "იმერეთის მხარეში მდებარე პრომეთეს მღვიმე ერთ-ერთი უდიდესი და ულამაზესი კარსტული მღვიმეა აზიაში. იგი ცნობილია განსაცვიფრებელი სტალაქტიტების, სტალაგმიტების, მიწისქვეშა მდინარეებისა და დარბაზების მრავალფეროვნებით, რაც წყლისა და კირქვის საუკუნოვანი თანაარსებობის საოცარი შედეგია.",
+            textEn = "Located in the Imereti region, Prometheus Cave is one of Asia's largest and most gorgeous karst cave complexes. Discovered in 1984, it features spectacular underground rivers, vast echoing halls, and millions of years of stalactites and stalagmites shaped by nature.",
+            unlockRequirementGe = "მიაღწიეთ მე-6 დონეს თამაშში",
+            unlockRequirementEn = "Reach Level 6 in the game",
+            iconSymbol = "🔮",
+            sourceUrl = "https://en.wikipedia.org/wiki/Prometheus_Cave"
+        ),
+        HistoryFact(
+            id = "martvili_canyon",
+            titleGe = "სამეგრელო • მარტვილის კანიონი",
+            titleEn = "Samegrelo • Martvili Canyon",
+            eraGe = "მეზოზოური ერა",
+            eraEn = "Mesozoic Epoch to Present",
+            textGe = "მარტვილის კანიონი სამეგრელოს ერთ-ერთი ბუნებრივი საოცრებაა. ზურმუხტისფერი აბაშის მდინარე კვეთს ღრმა ხეობებს, სადაც ნაპოვნია უძველესი დინოზავრების გაქვავებული ძვლები და ნაკვალევი. აყვავებული მწვანე ხავსით დაფარული კირქვის კედლები და ჩანჩქერები ქმნის ჯადოსნურ ატმოსფეროს.",
+            textEn = "Martvili Canyon is a breathtaking natural monument in Samegrelo where the emerald Abasha River winds through high limestone cliffs and cascades. Archaeologists have discovered prehistoric dinosaur fossils and footprints preserved here in the ancient layers.",
+            unlockRequirementGe = "მიაღწიეთ მე-7 დონეს თამაშში",
+            unlockRequirementEn = "Reach Level 7 in the game",
+            iconSymbol = "🌲",
+            sourceUrl = "https://en.wikipedia.org/wiki/Martvili_Canyon"
+        ),
+        HistoryFact(
+            id = "keselo_forts",
+            titleGe = "თუშეთი • კესელოს ციხეები",
+            titleEn = "Tusheti • Keselo Forts",
+            eraGe = "შუა საუკუნეები",
+            eraEn = "Medieval Towers",
+            textGe = "კესელო არის შუა საუკუნეების პატარა ციხე-სოფელი თუშეთში, რომელიც მდებარეობს სოფელ შენაქოს მახლობლად, მაღალ კლდეზე. იგი შედგება ფიქალის ქვით ნაგები თავდაცვითი კოშკებისგან, რომლებიც თუშ მებრძოლებს იცავდა მტრის თავდასხმებისგან, როდესაც ჩრდილოეთ კავკასიიდან შემოსევები ხშირდებოდა.",
+            textEn = "Keselo is a medieval fortress complex of slate stone towers built on a steep cliff in Tusheti, overlooking Omalo. Constructed during Mongolian and Dagestani invasions, these compact mountain keeps served as defensive holdouts for Tushetian clans.",
+            unlockRequirementGe = "მიაღწიეთ მე-8 დონეს თამაშში",
+            unlockRequirementEn = "Reach Level 8 in the game",
+            iconSymbol = "🦅",
+            sourceUrl = "https://georgia.travel/en_US/tusheti/keselo-forts"
+        ),
+        HistoryFact(
+            id = "uplistsikhe",
+            titleGe = "შიდა ქართლი • უფლისციხე",
+            titleEn = "Shida Kartli • Uplistsikhe",
+            eraGe = "ძვ. წ. II ათასწლეული",
+            eraEn = "Early Iron Age to Late Medieval",
+            textGe = "უფლისციხე არის კლდეში ნაკვეთი უძველესი ქალაქი საქართველოში. იგი იყო წარმართული ხანის უმნიშვნელოვანესი რელიგიური და პოლიტიკური ცენტრი, სადაც დღემდე შემორჩენილია საცხოვრებელი დარბაზები, წარმართული ტაძრები, საიდუმლო გვირაბები და უძველესი აფთიაქიც კი.",
+            textEn = "Uplistsikhe, meaning 'The Lord's Fortress', is an ancient rock-hewn town carved into volcanic cliffs in Shida Kartli. Dated as early as the 2000 BC Iron Age, it served as a key pagan center of worship before Georgia's Christianization, featuring palaces, temples, and tunnels.",
+            unlockRequirementGe = "მიაღწიეთ მე-9 დონეს თამაშში",
+            unlockRequirementEn = "Reach Level 9 in the game",
+            iconSymbol = "🏛️",
+            sourceUrl = "https://en.wikipedia.org/wiki/Uplistsikhe"
+        ),
+        HistoryFact(
+            id = "nikortsminda",
+            titleGe = "რაჭა • ნიკორწმინდა და შაორი",
+            titleEn = "Racha • Nikortsminda Cathedral",
+            eraGe = "XI საუკუნე (1010-1014 წწ.)",
+            eraEn = "Golden Age Beginning",
+            textGe = "რაჭის უმშვენიერესი ტაძარი ნიკორწმინდა ცნობილია თავისი საოცარი ფასადის ჩუქურთმებითა და მდიდრველი ფრესკებით. მის ბარელიეფებზე ასახულია ცხოველები, წმინდანები და მითოლოგიური არსებები, რაც ქართული ჩუქურთმის განვითარების მწვერვალს წარმოადგენს, ხოლო შაორის ტბა შემოდგომაზე ოქროსფერ ზღაპრად იქცევა.",
+            textEn = "Built during Bagrat III's reign, Nikortsminda is Racha's architectural masterpiece, renowned for its intricate stone reliefs depicting flora, fauna, and Christian liturgy. Paired with the majestic, mist-veiled forests of Shaori Reservoir nearby, Racha represents absolute spiritual harmony.",
+            unlockRequirementGe = "მიაღწიეთ მე-10 დონეს",
+            unlockRequirementEn = "Reach Level 10 in the game",
+            iconSymbol = "🍂",
+            sourceUrl = "https://en.wikipedia.org/wiki/Nikortsminda_Cathedral"
         )
     )
 }

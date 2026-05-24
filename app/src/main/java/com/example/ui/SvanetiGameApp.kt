@@ -163,13 +163,48 @@ fun StartScreen(
     isMuted: Boolean,
     onMuteToggle: () -> Unit
 ) {
-    val skyGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF261019), // Midnight berry
-            Color(0xFF6A1A2E), // Deep crimson
-            SvanObsidian
-        )
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val scalePulse by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale"
     )
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.15f,
+        targetValue = 0.35f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
+
+    val appLanguage by gameViewModel.language.collectAsStateWithLifecycle()
+    val appTheme by gameViewModel.theme.collectAsStateWithLifecycle()
+
+    val skyGradient = if (appTheme == AppTheme.FREEZING) {
+        Brush.verticalGradient(
+            colors = listOf(
+                Color(0xFF0F172A), // Dark slate
+                Color(0xFF0C4A6E), // Deep sky blue
+                Color(0xFF0284C7), // Light ice-blue glow
+                SvanObsidian
+            )
+        )
+    } else {
+        Brush.verticalGradient(
+            colors = listOf(
+                Color(0xFF1B0711), // Midnight plum
+                Color(0xFF4C0519), // Rich Georgian Burgundy
+                Color(0xFF1E1B4B), // Royal Indigo Night
+                SvanObsidian
+            )
+        )
+    }
 
     val bestScore = highScores.maxOfOrNull { it.score } ?: 0
     val rank = calculatePlayerRank(bestScore)
@@ -181,12 +216,35 @@ fun StartScreen(
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
+        val centerGlowColor = if (appTheme == AppTheme.FREEZING) {
+            Color(0xFF22D3EE).copy(alpha = glowAlpha)
+        } else {
+            GeorgianGold.copy(alpha = glowAlpha)
+        }
+
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawCircle(
-                color = GeorgianGold.copy(alpha = 0.2f),
-                radius = 160.dp.toPx(),
+                color = centerGlowColor,
+                radius = 165.dp.toPx() * scalePulse,
                 center = Offset(size.width / 2f, size.height / 2f - 100.dp.toPx())
             )
+
+            // Dynamic background snowflake rendering for Freezing theme
+            if (appTheme == AppTheme.FREEZING) {
+                val t = scalePulse * 15f
+                val pRand = java.util.Random(12345L)
+                for (i in 0..25) {
+                    val startX = pRand.nextFloat() * size.width
+                    val startY = pRand.nextFloat() * size.height
+                    val driftX = kotlin.math.sin((t + i).toDouble()).toFloat() * 25f
+                    val driftY = (t * 30f + startY) % size.height
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.4f + 0.5f * kotlin.math.sin((t + i).toDouble()).toFloat() * 0.5f),
+                        radius = 2f + pRand.nextFloat() * 4f,
+                        center = Offset((startX + driftX) % size.width, driftY)
+                    )
+                }
+            }
         }
 
         Column(
@@ -194,17 +252,18 @@ fun StartScreen(
             verticalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxHeight()
         ) {
-            // Upper Profile: Rank Badge, Coins Wallet, & Volume Controls
+            // Upper Profile Header: Rank Badge & Coins Wallet (Row 1)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Rank Badge -> Navigates to Leaderboard/Records
                 Card(
                     modifier = Modifier
+                        .weight(1.2f)
                         .height(44.dp)
                         .border(1.dp, rank.color.copy(alpha = 0.5f), RoundedCornerShape(22.dp))
                         .clickable { onLeaderboardClick() },
@@ -221,13 +280,15 @@ fun StartScreen(
                         Text(text = rank.icon, fontSize = 16.sp)
                         Column(verticalArrangement = Arrangement.Center) {
                             Text(
-                                text = rank.title,
+                                text = if (appLanguage == AppLanguage.GEORGIAN) rank.title else rank.enTitle,
                                 color = rank.color,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Black
                             )
                             Text(
-                                text = rank.nextThreshold,
+                                text = if (appLanguage == AppLanguage.GEORGIAN) {
+                                    if (rank.nextThreshold == "MAX RANK ACHIEVED") "მაქსიმალური წოდება" else rank.nextThreshold.replace("Next:", "შემდეგი:")
+                                } else rank.nextThreshold,
                                 color = CaucasusSnow.copy(alpha = 0.6f),
                                 fontSize = 8.sp,
                                 fontWeight = FontWeight.Bold
@@ -239,6 +300,7 @@ fun StartScreen(
                 // Coins Wallet -> Direct deep link to Skin Shop
                 Card(
                     modifier = Modifier
+                        .weight(0.8f)
                         .height(44.dp)
                         .border(1.dp, GeorgianGold.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
                         .clickable {
@@ -256,7 +318,7 @@ fun StartScreen(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(text = "🪙", fontSize = 16.sp)
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        Column(horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.Center) {
                             Text(
                                 text = "$coinsBalance",
                                 color = GeorgianGold,
@@ -264,7 +326,7 @@ fun StartScreen(
                                 fontWeight = FontWeight.Black
                             )
                             Text(
-                                text = "🎨 SHOP",
+                                text = if (appLanguage == AppLanguage.GEORGIAN) "მაღაზია" else "PAINT SHOP",
                                 color = CaucasusSnow.copy(alpha = 0.5f),
                                 fontSize = 7.sp,
                                 fontWeight = FontWeight.Bold
@@ -272,8 +334,85 @@ fun StartScreen(
                         }
                     }
                 }
+            }
 
-                // Volume button
+            // Global settings row (Language, Theme, Sound Control) (Row 2)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Language Switcher button (Pill style)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .background(SvanCharcoal.copy(alpha = 0.9f), RoundedCornerShape(22.dp))
+                        .border(1.dp, GeorgianGold.copy(alpha = 0.4f), RoundedCornerShape(22.dp))
+                        .clickable {
+                            SoundSynthesizer.playCollectCoin()
+                            gameViewModel.setLanguage(if (appLanguage == AppLanguage.GEORGIAN) AppLanguage.ENGLISH else AppLanguage.GEORGIAN)
+                        }
+                        .padding(horizontal = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        val flag = if (appLanguage == AppLanguage.GEORGIAN) "🇬🇪" else "🇬🇧"
+                        val label = if (appLanguage == AppLanguage.GEORGIAN) "ქართული" else "English"
+                        Text(text = flag, fontSize = 13.sp)
+                        Text(
+                            text = label,
+                            color = CaucasusSnow,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                }
+
+                // Theme Switcher button (Pill style)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .background(SvanCharcoal.copy(alpha = 0.9f), RoundedCornerShape(22.dp))
+                        .border(
+                            1.dp,
+                            if (appTheme == AppTheme.FREEZING) Color(0xFF22D3EE).copy(alpha = 0.5f) else GeorgianGold.copy(alpha = 0.4f),
+                            RoundedCornerShape(22.dp)
+                        )
+                        .clickable {
+                            SoundSynthesizer.playCollectCoin()
+                            gameViewModel.setTheme(if (appTheme == AppTheme.BURGUNDY) AppTheme.FREEZING else AppTheme.BURGUNDY)
+                        }
+                        .padding(horizontal = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        val indicator = if (appTheme == AppTheme.BURGUNDY) "🍷" else "❄️"
+                        val label = if (appLanguage == AppLanguage.GEORGIAN) {
+                            if (appTheme == AppTheme.BURGUNDY) "კოსმიური" else "ყინულოვანი"
+                        } else {
+                            if (appTheme == AppTheme.BURGUNDY) "Cosmic" else "Freezing"
+                        }
+                        Text(text = indicator, fontSize = 13.sp)
+                        Text(
+                            text = label,
+                            color = if (appTheme == AppTheme.FREEZING) Color(0xFF22D3EE) else GeorgianGold,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                }
+
+                // Volume / Mute button
                 IconButton(
                     onClick = onMuteToggle,
                     modifier = Modifier
@@ -297,17 +436,17 @@ fun StartScreen(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(90.dp)
-                        .shadow(8.dp, RoundedCornerShape(45.dp))
+                        .size(90.dp * scalePulse)
+                        .shadow(12.dp, RoundedCornerShape(45.dp))
                         .background(
-                            Brush.sweepGradient(listOf(GeorgianGold, Color(0xFF9E7E1D), GeorgianGold)),
+                            Brush.sweepGradient(listOf(GeorgianGold, Color(0xFFD4AF37), GeorgianGold)),
                             RoundedCornerShape(45.dp)
                         )
                         .border(3.dp, CaucasusSnow, RoundedCornerShape(45.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "🛡️",
+                        text = if (appTheme == AppTheme.FREEZING) "❄️" else "🛡️",
                         fontSize = 42.sp
                     )
                 }
@@ -315,26 +454,30 @@ fun StartScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = "სვანური ლეგენდები",
+                    text = if (appLanguage == AppLanguage.GEORGIAN) "სვანური ლეგენდები" else "SVANETI LEGENDS",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
-                    color = GeorgianGold,
+                    color = if (appTheme == AppTheme.FREEZING) Color(0xFF22D3EE) else GeorgianGold,
                     textAlign = TextAlign.Center,
                     fontFamily = FontFamily.Serif
                 )
                 Text(
-                    text = "SVANETI LEGENDS",
+                    text = if (appLanguage == AppLanguage.GEORGIAN) "SVANETI LEGENDS" else "სვანური ლეგენდები",
                     fontSize = 16.sp,
                     letterSpacing = 5.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = CaucasusSnow,
+                    color = CaucasusSnow.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "A 2D Action Game celebrating Georgian Culture & History",
+                    text = if (appLanguage == AppLanguage.GEORGIAN) {
+                        "2D სათავგადასავლო რანერი ქართული კულტურისა და ისტორიის შესახებ"
+                    } else {
+                        "A 2D Action Game celebrating Georgian Culture & History"
+                    },
                     fontSize = 13.sp,
                     color = CaucasusSnow.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center
@@ -349,37 +492,106 @@ fun StartScreen(
                     .fillMaxWidth()
                     .padding(bottom = 32.dp)
             ) {
-                Button(
-                    onClick = {
-                        SoundSynthesizer.playUnlockFanfare()
-                        onPlayClick()
-                    },
+                val difficultyState = gameViewModel.difficulty.collectAsStateWithLifecycle()
+                val currentDifficulty = difficultyState.value
+
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(68.dp)
-                        .shadow(8.dp, RoundedCornerShape(34.dp))
-                        .border(3.dp, GeorgianGold, RoundedCornerShape(34.dp))
-                        .testTag("play_button"),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = GeorgianCrimson,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(34.dp)
+                        .height(68.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                    // Start Button (priority size)
+                    Button(
+                        onClick = {
+                            SoundSynthesizer.playUnlockFanfare()
+                            onPlayClick()
+                        },
+                        modifier = Modifier
+                            .weight(1.3f)
+                            .fillMaxHeight()
+                            .shadow(8.dp, RoundedCornerShape(34.dp))
+                            .border(3.dp, GeorgianGold, RoundedCornerShape(34.dp))
+                            .testTag("play_button"),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GeorgianCrimson,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(34.dp)
                     ) {
-                        Text(text = "🔥", fontSize = 24.sp)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "ლეგენდის დაწყება • PLAY RUN",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(text = "🗡️", fontSize = 24.sp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(text = if (appTheme == AppTheme.FREEZING) "❄️" else "⚔️", fontSize = 20.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (appLanguage == AppLanguage.GEORGIAN) "ლეგენდის დაწყება" else "START RUN",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                    }
+
+                    // Difficulty Selector Row
+                    Row(
+                        modifier = Modifier
+                            .weight(1.3f)
+                            .fillMaxHeight()
+                            .background(SvanCharcoal.copy(alpha = 0.95f), RoundedCornerShape(34.dp))
+                            .border(2.dp, GeorgianGold.copy(alpha = 0.7f), RoundedCornerShape(34.dp))
+                            .padding(horizontal = 4.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        listOf(
+                            GameDifficulty.EASY to if (appLanguage == AppLanguage.GEORGIAN) "მარტივი" else "Easy",
+                            GameDifficulty.MEDIUM to if (appLanguage == AppLanguage.GEORGIAN) "საშუალო" else "Normal",
+                            GameDifficulty.HARD to if (appLanguage == AppLanguage.GEORGIAN) "რთული" else "Hard"
+                        ).forEach { (diff, label) ->
+                            val isSelected = currentDifficulty == diff
+                            val bg = if (isSelected) {
+                                when (diff) {
+                                    GameDifficulty.EASY -> Color(0xFF047857) // Dark Emerald
+                                    GameDifficulty.MEDIUM -> Color(0xFFD97706) // Dark Amber
+                                    GameDifficulty.HARD -> Color(0xFFB91C1C) // Dark Crimson
+                                }
+                            } else Color.Transparent
+
+                            val txtCol = if (isSelected) Color.White else CaucasusSnow.copy(alpha = 0.5f)
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .background(bg, RoundedCornerShape(30.dp))
+                                    .clickable {
+                                        SoundSynthesizer.playCollectCoin()
+                                        gameViewModel.setDifficulty(diff)
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    val emoji = when (diff) {
+                                        GameDifficulty.EASY -> "🍃"
+                                        GameDifficulty.MEDIUM -> "⚡"
+                                        GameDifficulty.HARD -> "💀"
+                                    }
+                                    Text(text = emoji, fontSize = 11.sp)
+                                    Text(
+                                        text = label,
+                                        fontSize = 8.sp,
+                                        fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
+                                        color = txtCol
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -406,7 +618,7 @@ fun StartScreen(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(
-                                text = "ისტორია • FACTS",
+                                text = if (appLanguage == AppLanguage.GEORGIAN) "კულტურა • HUB" else "HERITAGE HUB",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -455,7 +667,7 @@ fun StartScreen(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "ქრონიკები • RECORDS",
+                                text = if (appLanguage == AppLanguage.GEORGIAN) "რეკორდები • LIST" else "LEADERBOARD",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -1048,19 +1260,22 @@ fun EncyclopediaScreen(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column {
+                val appLanguage by gameViewModel.language.collectAsStateWithLifecycle()
                 Text(
-                    text = "კულტურული ჰაბი • HERITAGE HUB",
+                    text = if (appLanguage == AppLanguage.GEORGIAN) "კულტურული ჰაბი" else "HERITAGE HUB",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                     color = GeorgianGold
                 )
                 Text(
-                    text = "Chronicles, Wikipedia Links & Outfits",
+                    text = if (appLanguage == AppLanguage.GEORGIAN) "ისტორიული გრაგნილები, ვიკიპედიის ბმულები და მებრძოლები" else "Chronicles, Wikipedia Links & Outfits",
                     fontSize = 11.sp,
                     color = CaucasusSnow.copy(alpha = 0.6f)
                 )
             }
         }
+
+        val appLanguage by gameViewModel.language.collectAsStateWithLifecycle()
 
         // Custom M3 Segmented Navigation Tabs
         Row(
@@ -1081,7 +1296,7 @@ fun EncyclopediaScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "ენციკლოპედია • FACTS",
+                    text = if (appLanguage == AppLanguage.GEORGIAN) "ენციკლოპედია" else "ENCYCLOPEDIA",
                     color = if (activeTab == 0) SvanObsidian else CaucasusSnow,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp
@@ -1097,7 +1312,7 @@ fun EncyclopediaScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "სკინების მაღაზია • SKINS",
+                    text = if (appLanguage == AppLanguage.GEORGIAN) "სკინების მაღაზია" else "SKINS SHOP",
                     color = if (activeTab == 1) SvanObsidian else CaucasusSnow,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp
@@ -1114,7 +1329,11 @@ fun EncyclopediaScreen(
                 ) {
                     item {
                         Text(
-                            text = "შეაგროვეთ ისტორიის გრაგნილები და ქვევრები თამაშში ახალი თავების გასახსნელად!",
+                            text = if (appLanguage == AppLanguage.GEORGIAN) {
+                                "შეაგროვეთ ისტორიის გრაგნილები და ქვევრები თამაშში ახალი თავების გასახსნელად!"
+                            } else {
+                                "Collect historical scrolls and kvevris in the game to unlock new heritage chapters!"
+                            },
                             fontSize = 11.sp,
                             color = CaucasusSnow.copy(alpha = 0.5f),
                             textAlign = TextAlign.Center,
@@ -1216,7 +1435,7 @@ fun EncyclopediaScreen(
                             Spacer(modifier = Modifier.height(12.dp))
 
                             Text(
-                                text = fact.eraGe + " • " + fact.eraEn,
+                                text = if (appLanguage == AppLanguage.GEORGIAN) fact.eraGe else fact.eraEn,
                                 color = GeorgianGold,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
@@ -1225,13 +1444,13 @@ fun EncyclopediaScreen(
                             Spacer(modifier = Modifier.height(4.dp))
 
                             Text(
-                                text = fact.titleGe,
+                                text = if (appLanguage == AppLanguage.GEORGIAN) fact.titleGe else fact.titleEn,
                                 color = CaucasusSnow,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Black
                             )
                             Text(
-                                text = fact.titleEn,
+                                text = if (appLanguage == AppLanguage.GEORGIAN) fact.titleEn else fact.titleGe,
                                 color = CaucasusSnow.copy(alpha = 0.5f),
                                 fontSize = 14.sp
                             )
@@ -1241,10 +1460,10 @@ fun EncyclopediaScreen(
                             LazyColumn(
                                 verticalArrangement = Arrangement.spacedBy(16.dp),
                                 modifier = Modifier.weight(1f)
-                            ) {
+                             ) {
                                 item {
                                     Text(
-                                        text = fact.textGe,
+                                        text = if (appLanguage == AppLanguage.GEORGIAN) fact.textGe else fact.textEn,
                                         fontSize = 14.sp,
                                         lineHeight = 22.sp,
                                         color = CaucasusSnow,
@@ -1261,7 +1480,7 @@ fun EncyclopediaScreen(
                                 }
                                 item {
                                     Text(
-                                        text = fact.textEn,
+                                        text = if (appLanguage == AppLanguage.GEORGIAN) fact.textEn else fact.textGe,
                                         fontSize = 13.sp,
                                         lineHeight = 20.sp,
                                         color = CaucasusSnow.copy(alpha = 0.7f),
@@ -1296,7 +1515,7 @@ fun EncyclopediaScreen(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "წყარო • WIKIPEDIA RESOURCE",
+                                            text = if (appLanguage == AppLanguage.GEORGIAN) "წყარო • ვიკიპედიის ბმული" else "RESEARCH • WIKIPEDIA SOURCE",
                                             color = SvanObsidian,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 12.sp
